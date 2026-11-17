@@ -907,7 +907,7 @@ function finishLesson(){if(!session)return;const id=session.course;const lessonK
 
 const SIDETHRESHOLDS=[5,10,50,100,200,300,500,700,900,1000];
 const SECRET_NAMES=['الشرارة الغامضة','خطوة خارج المسار','الزائر الخفي','جامع اللحظات','عين المستكشف','ظل المثابرة','مفتاح الأسرار','حارس البوابة','الرحلة التي لا تنتهي','الأسطورة المجهولة'];
-const defaultState=()=>({xp:0,completed:{en:0,zh:0,fr:0,math:0,ar:0,engram:0},courseAnswers:{en:0,zh:0,fr:0,math:0,ar:0,engram:0},lessonDone:{},xpUnlocked:[],courseUnlocked:{en:[],zh:[],fr:[],math:[],ar:[],engram:[]},secretUnlocked:[],secretStats:{contestWins:0,perfectChallenges:0,lateLessons:0,dawnLessons:0,avatarChanges:0,avatarHistory:['🧠'],perfectSessions:0,quickLessons:0,lessonsWithoutContest:0,leaderboardVisits:0,onePointWins:0,returnAfterAbsence:false,challengeDayCounts:{}},playerName:'',avatarEmoji:'🧠',avatarData:'',dailyCompleted:{},totalAnswered:0,totalCorrect:0,streakCorrect:0,lessonsSinceStart:0,days:0,lastDay:'',sessionCount:0,days:0,lastDay:'',weekXP:0,weekKey:'',leagueTier:0,lastLeagueResult:'',lastLeagueRank:0,mathCurriculumVersion:10,hamasahVersion:1});
+const defaultState=()=>({xp:0,completed:{en:0,zh:0,fr:0,math:0,ar:0,engram:0},courseAnswers:{en:0,zh:0,fr:0,math:0,ar:0,engram:0},lessonDone:{},xpUnlocked:[],courseUnlocked:{en:[],zh:[],fr:[],math:[],ar:[],engram:[]},secretUnlocked:[],secretStats:{contestWins:0,perfectChallenges:0,lateLessons:0,dawnLessons:0,avatarChanges:0,avatarHistory:['🧠'],perfectSessions:0,quickLessons:0,lessonsWithoutContest:0,leaderboardVisits:0,onePointWins:0,returnAfterAbsence:false,challengeDayCounts:{},lessonsToday:{},perfectLessonKeys:[],evaluatedUnits:[],perfectUnitStreak:0,comebackActive:false,comebackCorrect:0},playerName:'',avatarEmoji:'🧠',avatarData:'',dailyCompleted:{},totalAnswered:0,totalCorrect:0,streakCorrect:0,lessonsSinceStart:0,days:0,lastDay:'',sessionCount:0,days:0,lastDay:'',weekXP:0,weekKey:'',leagueTier:0,lastLeagueResult:'',lastLeagueRank:0,mathCurriculumVersion:10,hamasahVersion:1});
 let state=loadState();state.secretStats=state.secretStats||{};if(state.secretStats.lastActiveDate){const gap=Math.floor((new Date(todayKey())-new Date(state.secretStats.lastActiveDate))/(86400000));if(gap>=14)state.secretStats.returnAfterAbsence=true;}state.secretStats.lastActiveDate=todayKey();let screen='home';let currentCourse=null;let currentLesson=null;let session=null;let achievementTab='courses';let achievementFilter='all';let toastQueue=[];let lastPadButtons={};
 let pendingDailyId=null;
 function startDailyChallenge(dailyId,courseId){
@@ -1025,9 +1025,9 @@ function startLesson(id,lessonKey){
 function toast(title,desc,emoji='🏆',type='regular'){const area=document.getElementById('toast-area');const el=document.createElement('div');el.className='toast';el.innerHTML=`<div class="toast-symbol">${emoji}</div><div><strong>${title}</strong><small>${desc||''}</small></div>`;area.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(-8px)';setTimeout(()=>el.remove(),250)},4200)}
 function unlockCourseAchievements(id){const c=courseById(id);if(!c)return;state.courseUnlocked[id]=state.courseUnlocked[id]||[];const count=state.courseAnswers?.[id]||0;MILESTONES.forEach((threshold,i)=>{if(count>=threshold&&!state.courseUnlocked[id].includes(i)){state.courseUnlocked[id].push(i);toast('إنجاز جديد: '+c.ach[i],`أجبت عن ${fmt(threshold)} سؤالًا في ${c.name}`,TIER_EMOJI[tierFor(i)]||'🏅','course')}})}
 function checkXpAchievements(){state.xpUnlocked=state.xpUnlocked||[];XP_MILESTONES.forEach((threshold,i)=>{if(state.xp>=threshold&&!state.xpUnlocked.includes(i)){state.xpUnlocked.push(i);toast('إنجاز XP جديد!',XP_NAMES[i]+' — '+fmt(threshold)+' XP',i>=8?'💎':i>=6?'🥇':'⚡')}})}
-const SECRET_EXTRA_NAMES=['عاشق الاستمرار','ملك المسابقات','الدقيق','المتصدر الخفي','الساهر','ابن الشهر','بطل العشرين','صائد التحديات','ملك القمة','جامع الألف','المليونير','طائر الفجر','سيد المواد','العلامة الكاملة','المتجدد','صاحب الوجوه','قاهر الأقوياء','سلسلة الانتصارات','البرق','صائد الأسرار','العائد الأسطوري','لا شيء يوقفني','المحظوظ','المبدع','الشبح'];
+const SECRET_EXTRA_NAMES=['عاشق الاستمرار','ملك المسابقات','الدقيق','المتصدر الخفي','الساهر','ابن الشهر','بطل العشرين','صائد التحديات','ملك القمة','جامع الألف','المليونير','طائر الفجر','سيد المواد','العلامة الكاملة','المتجدد','صاحب الوجوه','قاهر الأقوياء','سلسلة الانتصارات','البرق','صائد الأسرار','العائد الأسطوري','لا شيء يوقفني','المحظوظ','المبدع','الشبح','العقل الخارق','القناص','عدّاء الدروس','العودة الأسطورية'];
 const SECRET_ALL_NAMES=[...SECRET_NAMES,...SECRET_EXTRA_NAMES];
-function secretExtraConditions(){const st=state.secretStats||{};const days=Number(state.days||0),xp=Number(state.xp||0),answers=Number(state.totalAnswered||0),correct=Number(state.totalCorrect||0),wins=Number(st.contestWins||0);return [days>=7,wins>=5,Number(st.perfectChallenges||0)>=10,Number(st.leaderboardVisits||0)>=1,Number(st.lateLessons||0)>=1,days>=30,wins>=20,answers>=50,Number(st.firstPlaceDays||0)>=3,xp>=1000,xp>=10000,Number(st.dawnLessons||0)>=1,Object.values(state.completed||{}).filter(v=>v>0).length>=6,Number(st.perfectSessions||0)>=1,Number(st.avatarChanges||0)>=1,new Set(st.avatarHistory||[]).size>=5,Number(st.strongWins||0)>=1,wins>=3,Number(st.quickLessons||0)>=1,(state.secretUnlocked||[]).length>=11,!!st.returnAfterAbsence,Number(st.challengeDayCounts?.[todayKey()]||0)>=5,Number(st.onePointWins||0)>=1,Number(st.perfectSessions||0)>=3,Number(st.lessonsWithoutContest||0)>=1]}
+function secretExtraConditions(){const st=state.secretStats||{};const days=Number(state.days||0),xp=Number(state.xp||0),answers=Number(state.totalAnswered||0),correct=Number(state.totalCorrect||0),wins=Number(st.contestWins||0);return [days>=7,wins>=5,Number(st.perfectChallenges||0)>=10,Number(st.leaderboardVisits||0)>=1,Number(st.lateLessons||0)>=1,days>=30,wins>=20,answers>=50,Number(st.firstPlaceDays||0)>=3,xp>=1000,xp>=10000,Number(st.dawnLessons||0)>=1,Object.values(state.completed||{}).filter(v=>v>0).length>=6,Number(st.perfectSessions||0)>=1,Number(st.avatarChanges||0)>=1,new Set(st.avatarHistory||[]).size>=5,Number(st.strongWins||0)>=1,wins>=3,Number(st.quickLessons||0)>=1,(state.secretUnlocked||[]).length>=11,!!st.returnAfterAbsence,Number(st.challengeDayCounts?.[todayKey()]||0)>=5,Number(st.onePointWins||0)>=1,Number(st.perfectSessions||0)>=3,Number(st.lessonsWithoutContest||0)>=1,Number(st.perfectUnitStreak||0)>=3,Number(state.streakCorrect||0)>=20,Number(st.lessonsToday?.[todayKey()]||0)>=5,!!st.comebackActive&&Number(st.comebackCorrect||0)>=50]}
 function checkSecretAchievements(){const total=totalLessons();state.secretUnlocked=state.secretUnlocked||[];state.secretStats=state.secretStats||{};const messages=['بدأت شرارة الحماسة!','وصلت إلى مرحلة الحماسة الثانية!','يا سلام! حماستك وصلت لمستوى جديد!','أنت تتقدم بثبات… استمر!','وصلت إلى محطة إنجاز رائعة!','حماستك صارت أقوى!','اقتربت من مستوى الأبطال!','أصبحت من أصحاب العزيمة!','رحلتك صارت استثنائية!','أنت الآن في قمة الحماسة!'];SIDETHRESHOLDS.forEach((threshold,i)=>{if(total>=threshold&&!state.secretUnlocked.includes(i)){state.secretUnlocked.push(i);toast('وصلت إلى إنجاز جديد!',messages[i]+' 🎁',i>=8?'💎':'✨')}});secretExtraConditions().forEach((met,j)=>{const i=j+10;if(met&&!state.secretUnlocked.includes(i)){state.secretUnlocked.push(i);toast('اكتشفت سرًا جديدًا!', 'تم فتح إنجاز سري جديد! 🎁','✨')}})}
 function setDayStreak(){const today=new Date();const key=`${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;if(state.lastDay!==key){if(state.lastDay){const prev=new Date(state.lastDay);const now=new Date(key);const diff=Math.round((now-prev)/(1000*60*60*24));state.days=diff===1?(state.days||0)+1:1}else state.days=1;state.lastDay=key}}
 function recordQuestionAnswer(q,selectedValue,isCorrect,transcript=''){if(!session||session.selected!==null)return;session.selected=selectedValue;session.answerCorrect=!!isCorrect;session.transcript=transcript;session.answers.push(selectedValue);session.correct+=isCorrect?1:0;state.totalAnswered++;if(isCorrect){state.totalCorrect++;state.xp+=10;session.xpEarned+=10;state.streakCorrect=(state.streakCorrect||0)+1}else state.streakCorrect=0;checkXpAchievements();save();render();if(isCorrect&&state.streakCorrect>0&&state.streakCorrect%3===0)toast('سلسلة إجابات صحيحة!','برينو يقول: كفو! استمر، أنت تقترب من الإنجاز التالي.','🔥');}
@@ -1152,14 +1152,30 @@ function beginQuiz(){
 function finishLesson(){
  if(!session)return;
  const id=session.course,lessonKey=session.lessonKey,dailyId=session.dailyId,wasDone=lessonIsDone(lessonKey);
+ const score=session.correct,total=session.questions.length;
  state.lessonDone=state.lessonDone||{};state.lessonDone[lessonKey]=true;
  const c=courseById(id);state.completed[id]=c?flattenCourseLessons(c).filter(x=>lessonIsDone(x.key)).length:Math.max(0,Number(state.completed[id]||0));
- if(!wasDone)state.lessonsSinceStart=(state.lessonsSinceStart||0)+1;
+ if(!wasDone){
+  state.lessonsSinceStart=(state.lessonsSinceStart||0)+1;
+  const st=state.secretStats=state.secretStats||{},day=todayKey();
+  st.lessonsToday=st.lessonsToday||{};st.lessonsToday[day]=(Number(st.lessonsToday[day])||0)+1;
+  st.perfectLessonKeys=Array.isArray(st.perfectLessonKeys)?st.perfectLessonKeys:[];
+  if(score===total&&!st.perfectLessonKeys.includes(lessonKey))st.perfectLessonKeys.push(lessonKey);
+  const unit=c?.units.find(u=>String(u.id)===String(session.unitId));
+  if(unit&&unit.steps.every(step=>lessonIsDone(step.key))){
+   const unitKey=id+'::'+unit.id;st.evaluatedUnits=Array.isArray(st.evaluatedUnits)?st.evaluatedUnits:[];
+   if(!st.evaluatedUnits.includes(unitKey)){
+    st.evaluatedUnits.push(unitKey);
+    if(unit.steps.every(step=>st.perfectLessonKeys.includes(step.key)))st.perfectUnitStreak=(Number(st.perfectUnitStreak)||0)+1;
+    else st.perfectUnitStreak=0;
+   }
+  }
+ }
  const previousHamasah=Number(state.days||0);setDayStreak();
  if(Number(state.days||0)>previousHamasah)toast('🔥 حماسة جديدة!','وصلت إلى اليوم '+fmt(state.days)+' من الحماسة! استمر يا بطل.','🔥');
  state.xp+=20;state.weekXP=(state.weekXP||0)+20;session.xpEarned+=20;unlockCourseAchievements(id);checkXpAchievements();checkSecretAchievements();
  if(dailyId){const day=todayKey();state.dailyCompleted=state.dailyCompleted||{};state.dailyCompleted[day]=state.dailyCompleted[day]||{};if(!state.dailyCompleted[day][dailyId]){state.dailyCompleted[day][dailyId]=true;state.xp+=25;state.weekXP=(state.weekXP||0)+25;session.xpEarned+=25;checkXpAchievements();toast('فزت في المسابقة اليومية!','مكافأة إضافية +25 XP','🎯');}}
- const score=session.correct,total=session.questions.length;save();
+ save();
  if(score===total)toast('يا سلام! نتيجة كاملة!','برينو فخور بك — كل إجاباتك صحيحة!','🎉');else if(score/total>=.8)toast('تقدّم رائع!','أداء قوي، واصل الرحلة!','🔥');
  toast(wasDone?'مراجعة ممتازة!':'تم حفظ الدرس!',wasDone?'+20 XP للمراجعة — تقدم الدرس لا يتكرر':'+20 XP — تقدمك محفوظ','📘');
  session=null;pendingDailyId=null;currentCourse=id;screen=dailyId?'daily':'course';render();window.scrollTo({top:0,behavior:'smooth'});
@@ -1168,9 +1184,15 @@ function recordQuestionAnswer(q,selectedValue,isCorrect,transcript=''){
  if(!session||session.selected!==null)return;
  session.selected=selectedValue;session.answerCorrect=!!isCorrect;session.transcript=transcript;session.answers.push(selectedValue);session.correct+=isCorrect?1:0;
  state.totalAnswered=(state.totalAnswered||0)+1;state.courseAnswers=state.courseAnswers||{};state.courseAnswers[session.course]=(state.courseAnswers[session.course]||0)+1;unlockCourseAchievements(session.course);
- if(isCorrect){state.totalCorrect=(state.totalCorrect||0)+1;state.xp=(state.xp||0)+10;state.weekXP=(state.weekXP||0)+10;session.xpEarned+=10;state.streakCorrect=(state.streakCorrect||0)+1;if(state.streakCorrect%5===0)toast('سلسلة إجابات ممتازة!','🔥 '+state.streakCorrect+' إجابات صحيحة متتالية! استمر يا بطل.','🔥');}
- else state.streakCorrect=0;
- checkXpAchievements();save();render();
+ const st=state.secretStats=state.secretStats||{};
+ if(isCorrect){
+  state.totalCorrect=(state.totalCorrect||0)+1;state.xp=(state.xp||0)+10;state.weekXP=(state.weekXP||0)+10;session.xpEarned+=10;state.streakCorrect=(state.streakCorrect||0)+1;
+  if(st.comebackActive)st.comebackCorrect=(Number(st.comebackCorrect)||0)+1;
+  if(state.streakCorrect%5===0)toast('سلسلة إجابات ممتازة!','🔥 '+state.streakCorrect+' إجابات صحيحة متتالية! استمر يا بطل.','🔥');
+ }else{
+  state.streakCorrect=0;st.comebackActive=true;st.comebackCorrect=0;
+ }
+ checkXpAchievements();checkSecretAchievements();save();render();
 }
 function renderHome(){
  const total=totalLessons(),doneToday=Object.keys((state.dailyCompleted||{})[todayKey()]||{}).length;
